@@ -34,7 +34,8 @@ export const setRefreshToken = (token: string | null) => {
 
 export const getRefreshToken = () => refreshToken;
 
-const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const baseURL = configuredApiUrl || '/api/v1';
 
 export const apiClient = axios.create({
   baseURL,

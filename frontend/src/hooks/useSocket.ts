@@ -5,7 +5,7 @@ export const useSocket = (namespace: string = '/signaling') => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    const wsUrl = import.meta.env.VITE_WS_URL || window.location.origin;
+    const wsUrl = import.meta.env.VITE_WS_URL?.trim() || window.location.origin;
     const socketInstance = io(`${wsUrl}${namespace}`, {
       autoConnect: true,
       transports: ['websocket'],
