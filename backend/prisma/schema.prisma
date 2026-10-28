@@ -1,0 +1,421 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  HOSPITAL_ADMIN
+  DIABETOLOGIST
+  DIABETES_NURSE_EDUCATOR
+  CLINICAL_NUTRITIONIST
+  PATIENT
+}
+
+enum AccountStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum GlucoseContext {
+  FASTING
+  BEFORE_MEAL
+  AFTER_MEAL
+  BEDTIME
+  RANDOM
+}
+
+enum RefillStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  REJECTED
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  REQUESTED
+  SCHEDULED
+  EXPIRED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentMode {
+  VIDEO
+  AUDIO
+  IN_PERSON
+}
+
+enum RiskTier {
+  CRITICAL
+  HIGH
+  MODERATE
+  LOW
+}
+
+enum ConsentType {
+  TERMS_AND_PRIVACY
+  TELEMEDICINE
+  RESEARCH_DATA_SHARING
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  EMAIL
+  IN_APP
+}
+
+model Tenant {
+  id        String       @id @default(uuid())
+  name      String
+  slug      String       @unique
+  status    TenantStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  settings     TenantSettings?
+  users        User[]
+  invitations  Invitation[]
+  patients     PatientProfile[]
+  clinicians   ClinicianProfile[]
+  glucose      GlucoseReading[]
+  hba1c        Hba1cResult[]
+  medications  Medication[]
+  refills      RefillRequest[]
+  appointments Appointment[]
+  riskTriage   RiskAssessment[]
+  auditLogs    AuditLog[]
+
+  @@map("tenants")
+}
+
+model TenantSettings {
+  id                    String   @id @default(uuid())
+  tenantId              String   @unique
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  glucoseUnits          String   @default("mmol/L") // mmol/L or mg/dL
+  pharmacyContact       String?
+  refillReminderOffsets Int[]    @default([7, 3, 0]) // days before supply runs out
+
+  // Custom risk thresholds (defaults can be overridden)
+  critHypoThreshold     Float    @default(3.0)
+  critHyperThreshold    Float    @default(16.7)
+  critHba1cThreshold    Float    @default(10.0)
+  highHba1cMin          Float    @default(8.5)
+  modHba1cMin           Float    @default(7.0)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("tenant_settings")
+}
+
+model User {
+  id                   String        @id @default(uuid())
+  tenantId             String?
+  tenant               Tenant?       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email                String        @unique
+  phone                String?
+  passwordHash         String
+  firstName            String
+  lastName             String
+  role                 Role
+  status               AccountStatus @default(ACTIVE)
+  mfaEnabled           Boolean       @default(false)
+  mfaSecret            String?
+  lastLoginAt          DateTime?
+  refreshTokenHash     String?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  patientProfile       PatientProfile?
+  clinicianProfile     ClinicianProfile?
+  auditLogs            AuditLog[]       @relation("ActorUser")
+  deviceTokens         DeviceToken[]
+  notifications        Notification[]
+
+  @@map("users")
+}
+
+model Invitation {
+  id         String        @id @default(uuid())
+  tenantId   String
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email      String
+  phone      String?
+  firstName  String
+  lastName   String
+  role       Role
+  tokenHash  String        @unique
+  expiresAt  DateTime
+  status     AccountStatus @default(INVITED)
+  invitedBy  String
+  createdAt  DateTime      @default(now())
+
+  @@map("invitations")
+}
+
+model PatientProfile {
+  id                   String           @id @default(uuid())
+  userId               String           @unique
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId             String
+  tenant               Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dateOfBirth          DateTime
+  sex                  String
+  diagnosisDate        DateTime?
+  assignedClinicianId  String?
+  assignedClinician    ClinicianProfile? @relation(fields: [assignedClinicianId], references: [id], onDelete: SetNull)
+
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  glucoseReadings      GlucoseReading[]
+  hba1cResults         Hba1cResult[]
+  medications          Medication[]
+  refillRequests       RefillRequest[]
+  appointments         Appointment[]
+  riskAssessments      RiskAssessment[]
+  consents             Consent[]
+
+  @@map("patient_profiles")
+}
+
+model ClinicianProfile {
+  id             String           @id @default(uuid())
+  userId         String           @unique
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId       String
+  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  specialty      Role             // DIABETOLOGIST, DIABETES_NURSE_EDUCATOR, CLINICAL_NUTRITIONIST
+  licenceNumber  String
+  bio            String?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  assignedPatients PatientProfile[]
+  appointments    Appointment[]
+  recordedHba1cs  Hba1cResult[]    @relation("RecordedByClinician")
+
+  @@map("clinician_profiles")
+}
+
+model GlucoseReading {
+  id          String         @id @default(uuid())
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  value       Float          // Stored canonically in mmol/L
+  context     GlucoseContext @default(RANDOM)
+  notes       String?
+  source      String         @default("MANUAL") // MANUAL, BLUETOOTH, SYNC
+  measuredAt  DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+
+  @@index([patientId, measuredAt])
+  @@map("glucose_readings")
+}
+
+model Hba1cResult {
+  id           String           @id @default(uuid())
+  tenantId     String
+  tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId    String
+  patient      PatientProfile   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  value        Float            // Stored as percentage e.g. 7.5
+  recordedById String?
+  recordedBy   ClinicianProfile? @relation("RecordedByClinician", fields: [recordedById], references: [id], onDelete: SetNull)
+  resultDate   DateTime         @default(now())
+  notes        String?
+  createdAt    DateTime         @default(now())
+
+  @@index([patientId, resultDate])
+  @@map("hba1c_results")
+}
+
+model Medication {
+  id               String               @id @default(uuid())
+  tenantId         String
+  tenant           Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId        String
+  patient          PatientProfile       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  name             String
+  dose             String               // e.g. "500mg"
+  instructions     String?
+  quantityDispensed Int                 @default(0)
+  startDate        DateTime
+  endDate          DateTime?
+  isActive         Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  schedules        MedicationSchedule[]
+  refillRequests   RefillRequest[]
+
+  @@map("medications")
+}
+
+model MedicationSchedule {
+  id           String     @id @default(uuid())
+  medicationId String
+  medication   Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  timeOfDay    String     // "08:00", "20:00"
+  daysOfWeek   Int[]      // [1,2,3,4,5,6,7] or [] for every day
+
+  @@map("medication_schedules")
+}
+
+model RefillRequest {
+  id           String       @id @default(uuid())
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId    String
+  patient      PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  medicationId String
+  medication   Medication   @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+  status       RefillStatus @default(PENDING)
+  notes        String?
+  requestedAt  DateTime     @default(now())
+  fulfilledAt  DateTime?
+
+  @@map("refill_requests")
+}
+
+model Appointment {
+  id          String            @id @default(uuid())
+  tenantId    String
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  clinicianId String
+  clinician   ClinicianProfile  @relation(fields: [clinicianId], references: [id], onDelete: Cascade)
+  startTime   DateTime
+  endTime     DateTime
+  mode        AppointmentMode   @default(VIDEO)
+  status      AppointmentStatus @default(SCHEDULED)
+  reason      String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  callSession CallSession?
+
+  @@map("appointments")
+}
+
+model CallSession {
+  id            String          @id @default(uuid())
+  appointmentId String          @unique
+  appointment   Appointment     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  modeUsed      AppointmentMode @default(VIDEO)
+  startedAt     DateTime?
+  endedAt       DateTime?
+  qualityStats  Json?           // Bandwidth, jitter, packet loss metrics
+
+  vitalsSnapshot VitalsSnapshot?
+
+  @@map("call_sessions")
+}
+
+model VitalsSnapshot {
+  id            String      @id @default(uuid())
+  callSessionId String      @unique
+  callSession   CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
+  systolicBp    Int?
+  diastolicBp   Int?
+  weightKg      Float?
+  glucoseMmol   Float?
+  notes         String?
+  recordedAt    DateTime    @default(now())
+
+  @@map("vitals_snapshots")
+}
+
+model RiskAssessment {
+  id          String         @id @default(uuid())
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  tier        RiskTier
+  reasons     String[]       // Array of human-readable trigger reasons
+  computedAt  DateTime       @default(now())
+
+  @@index([patientId, computedAt])
+  @@map("risk_assessments")
+}
+
+model Consent {
+  id         String      @id @default(uuid())
+  patientId  String
+  patient    PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  type       ConsentType
+  version    String
+  granted    Boolean     @default(true)
+  grantedAt  DateTime    @default(now())
+  revokedAt  DateTime?
+
+  @@map("consents")
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel   NotificationChannel
+  title     String
+  body      String
+  data      Json?
+  sentAt    DateTime            @default(now())
+  readAt    DateTime?
+
+  @@map("notifications")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String   // ANDROID, WEB
+  createdAt DateTime @default(now())
+
+  @@map("device_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  tenantId   String?
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  actorId    String?
+  actor      User?    @relation("ActorUser", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String   // e.g. "PATIENT_DATA_ACCESS", "TENANT_UPDATE"
+  resource   String   // e.g. "GlucoseReading:123"
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  @@map("audit_logs")
+}
