@@ -14,7 +14,7 @@ class EnvironmentVariables {
 
   @IsNumber()
   @IsOptional()
-  PORT: number = 3000;
+  PORT?: number;
 
   @IsString()
   @IsOptional()
@@ -31,6 +31,10 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   JWT_REFRESH_SECRET?: string;
+
+  @IsString()
+  @IsOptional()
+  CORS_ORIGINS?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
