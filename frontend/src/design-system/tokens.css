@@ -1,0 +1,58 @@
+/* Design Tokens */
+:root {
+  /* Brand Teal Palette */
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0f766e;
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
+  --color-primary: #0f766e;
+
+  /* Neutrals (Light) */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+
+  /* Health / Glucose Status Colors */
+  --color-low: #dc2626;      /* Red */
+  --color-inrange: #16a34a;  /* Green */
+  --color-high: #d97706;     /* Amber */
+  --color-veryhigh: #b91c1c; /* Dark Red */
+}
+
+.dark {
+  /* Brand Teal Palette (Dark mode adjust) */
+  --color-primary-50: #134e4a;
+  --color-primary-100: #115e59;
+  --color-primary-200: #0f766e;
+  --color-primary-300: #14b8a6;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #5eead4;
+  --color-primary-600: #2dd4bf;
+  --color-primary-700: #5eead4;
+  --color-primary-800: #99f6e4;
+  --color-primary-900: #ccfbf1;
+  --color-primary: #2dd4bf;
+
+  /* Neutrals (Dark) */
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-border: #334155;
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+
+  /* Health / Glucose Status Colors (Dark mode readable) */
+  --color-low: #ef4444;
+  --color-inrange: #22c55e;
+  --color-high: #f59e0b;
+  --color-veryhigh: #f87171;
+}

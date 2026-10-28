@@ -1,0 +1,46 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { Card } from '../../../components/ui/Card';
+import { Input } from '../../../components/ui/Input';
+import { Button } from '../../../components/ui/Button';
+import { GlucoseChart } from '../../../components/charts/GlucoseChart';
+import { patientService } from '../../../services/patientService';
+import { medicationService } from '../../../services/medicationService';
+import { appointmentService } from '../../../services/appointmentService';
+import { triageService } from '../../../services/triageService';
+import { RiskTier, AppointmentMode } from '../../../types';
+
+export const ClinicianPatientDetail: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [patient, setPatient] = useState<any>(null);
+  const [form, setForm] = useState({ name: '', dose: '', instructions: '', startDate: new Date().toISOString().slice(0, 10), quantityDispensed: '30' });
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+  const [activeForm, setActiveForm] = useState<string | null>(null);
+  const [appointmentForm, setAppointmentForm] = useState({ startTime: '', endTime: '', mode: AppointmentMode.VIDEO, reason: '' });
+  const [riskForm, setRiskForm] = useState({ tier: RiskTier.LOW, reasons: '' });
+  useEffect(() => { if (id) void patientService.getPatient(id).then((record) => { setPatient(record); setRiskForm({ tier: record.riskAssessments?.[0]?.tier || RiskTier.LOW, reasons: record.riskAssessments?.[0]?.reasons?.join(', ') || '' }); }); }, [id]);
+  const showMessage = (type: 'success' | 'error', text: string) => { setMessageType(type); setMessage(text); };
+  const prescribe = async (event: React.FormEvent) => { event.preventDefault(); if (!id) return; setActiveForm('medication'); try { await medicationService.addMedication({ patientId: id, name: form.name.trim(), dose: form.dose.trim(), instructions: form.instructions.trim() || undefined, startDate: form.startDate, quantityDispensed: Number(form.quantityDispensed) }); showMessage('success', 'Medication added to the patient record.'); setForm({ name: '', dose: '', instructions: '', startDate: new Date().toISOString().slice(0, 10), quantityDispensed: '30' }); setPatient(await patientService.getPatient(id)); } catch (requestError: any) { showMessage('error', requestError.response?.data?.message || 'Medication could not be added.'); } finally { setActiveForm(null); } };
+  const scheduleAppointment = async (event: React.FormEvent) => { event.preventDefault(); if (!id) return; if (new Date(appointmentForm.endTime) <= new Date(appointmentForm.startTime)) { showMessage('error', 'The end time must be after the start time.'); return; } setActiveForm('appointment'); try { await appointmentService.scheduleForPatient(id, { ...appointmentForm, startTime: new Date(appointmentForm.startTime).toISOString(), endTime: new Date(appointmentForm.endTime).toISOString() }); showMessage('success', 'Appointment scheduled for the patient.'); setAppointmentForm({ startTime: '', endTime: '', mode: AppointmentMode.VIDEO, reason: '' }); } catch (requestError: any) { showMessage('error', requestError.response?.data?.message || 'Appointment could not be scheduled.'); } finally { setActiveForm(null); } };
+  const updateRisk = async (event: React.FormEvent) => { event.preventDefault(); if (!id) return; const reasons = riskForm.reasons.split(',').map((reason) => reason.trim()).filter(Boolean); if (!reasons.length) { showMessage('error', 'Add at least one trigger reason.'); return; } setActiveForm('risk'); try { await triageService.updateRisk(id, riskForm.tier, reasons); showMessage('success', 'Patient risk assessment updated.'); setPatient(await patientService.getPatient(id)); } catch (requestError: any) { showMessage('error', requestError.response?.data?.message || 'Risk assessment could not be updated.'); } finally { setActiveForm(null); } };
+  if (!patient) return <p className="text-sm text-text-muted">Loading patient record...</p>;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3"><Button type="button" variant="ghost" onClick={() => navigate('/clinician/patients')} aria-label="Back to patients"><ArrowLeft className="mr-1 h-4 w-4" />Back</Button><h1 className="text-2xl font-bold text-text">Patient detail: {patient.user.firstName} {patient.user.lastName}</h1></div>
+
+      <Card>
+        <h3 className="text-sm font-bold text-text mb-4">Glucose Timeline (Last 14 Days)</h3>
+        <GlucoseChart readings={patient.glucoseReadings || []} />
+      </Card>
+      <Card><h2 className="text-base font-bold text-text mb-4">Prescribed medication</h2>{patient.medications?.length ? <div className="divide-y divide-border">{patient.medications.map((medication: any) => <div key={medication.id} className="flex items-center justify-between py-3"><div><p className="text-sm font-semibold text-text">{medication.name} {medication.dose}</p><p className="text-xs text-text-muted">{medication.instructions || 'As prescribed'}</p></div><span className="text-xs text-text-muted">{medication.isActive ? 'Active' : 'Inactive'}</span></div>)}</div> : <p className="text-sm text-text-muted">No prescriptions recorded.</p>}</Card>
+      <Card><h2 className="text-base font-bold text-text mb-4">Schedule appointment</h2><form onSubmit={scheduleAppointment} className="grid grid-cols-1 gap-3 md:grid-cols-2"><label className="flex flex-col gap-1 text-xs font-semibold text-text-muted">From<input className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal text-text" type="datetime-local" value={appointmentForm.startTime} onChange={(event) => setAppointmentForm({ ...appointmentForm, startTime: event.target.value })} required /></label><label className="flex flex-col gap-1 text-xs font-semibold text-text-muted">To<input className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal text-text" type="datetime-local" min={appointmentForm.startTime || undefined} value={appointmentForm.endTime} onChange={(event) => setAppointmentForm({ ...appointmentForm, endTime: event.target.value })} required /></label><select className="rounded-lg border border-border bg-background px-3 py-2 text-sm" value={appointmentForm.mode} onChange={(event) => setAppointmentForm({ ...appointmentForm, mode: event.target.value as AppointmentMode })}><option value="VIDEO">Video consultation</option><option value="AUDIO">Audio consultation</option><option value="IN_PERSON">In person</option></select><Input label="Reason" value={appointmentForm.reason} onChange={(event) => setAppointmentForm({ ...appointmentForm, reason: event.target.value })} /><Button type="submit" className="md:col-span-2" disabled={activeForm === 'appointment'}>{activeForm === 'appointment' ? 'Scheduling...' : 'Schedule appointment'}</Button></form></Card>
+      <Card><h2 className="text-base font-bold text-text mb-4">Risk assessment</h2><form onSubmit={updateRisk} className="grid grid-cols-1 gap-3 md:grid-cols-2"><select className="rounded-lg border border-border bg-background px-3 py-2 text-sm" value={riskForm.tier} onChange={(event) => setRiskForm({ ...riskForm, tier: event.target.value as RiskTier })}><option value={RiskTier.CRITICAL}>Critical</option><option value={RiskTier.HIGH}>High</option><option value={RiskTier.MODERATE}>Moderate</option><option value={RiskTier.LOW}>Low</option></select><Input label="Trigger reasons, comma separated" value={riskForm.reasons} onChange={(event) => setRiskForm({ ...riskForm, reasons: event.target.value })} required /><Button type="submit" className="md:col-span-2" disabled={activeForm === 'risk'}>{activeForm === 'risk' ? 'Updating...' : 'Update risk assessment'}</Button></form></Card>
+      <Card><h2 className="text-base font-bold text-text mb-4">Prescribe medication</h2><form onSubmit={prescribe} className="grid grid-cols-1 gap-3 md:grid-cols-2"><Input label="Medication" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /><Input label="Dose" placeholder="500mg" value={form.dose} onChange={(event) => setForm({ ...form, dose: event.target.value })} required /><Input label="Instructions" value={form.instructions} onChange={(event) => setForm({ ...form, instructions: event.target.value })} /><Input label="Quantity" type="number" min="1" value={form.quantityDispensed} onChange={(event) => setForm({ ...form, quantityDispensed: event.target.value })} required /><Input label="Start date" type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} required /><Button type="submit" className="md:col-span-2" disabled={activeForm === 'medication'}>{activeForm === 'medication' ? 'Saving...' : 'Add prescribed medication'}</Button></form></Card>
+      {message && <div className={`fixed inset-x-4 bottom-6 z-50 mx-auto max-w-lg rounded-lg border px-4 py-3 shadow-lg ${messageType === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`} role="alert">{message}</div>}
+    </div>
+  );
+};

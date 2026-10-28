@@ -1,0 +1,40 @@
+{
+  "app": {
+    "title": "Mfumo wa HMS wa Kisukari",
+    "logout": "Toka",
+    "login": "Ingia",
+    "dashboard": "Dashibodi",
+    "settings": "Mipangilio",
+    "welcome": "Karibu tena"
+  },
+  "glucose": {
+    "logHeading": "Sajili Kipimo cha Sukari",
+    "value": "Kipimo cha Sukari",
+    "context": "Wakati wa Kipimo",
+    "fasting": "Kabla ya Kula (Asubuhi)",
+    "beforeMeal": "Kabla ya Chakula",
+    "afterMeal": "Baada ya Chakula",
+    "bedtime": "Wakati wa Kulala",
+    "random": "Wakati wowote",
+    "low": "Chini",
+    "inRange": "Kawaida",
+    "high": "Juu",
+    "veryHigh": "Juu Sana",
+    "unit": "mmol/L"
+  },
+  "triage": {
+    "critical": "Hali ya Hatari",
+    "high": "Juu",
+    "moderate": "Kiasi",
+    "low": "Chini"
+  },
+  "navigation": {
+    "home": "Nyumbani",
+    "log": "Sajili",
+    "meds": "Dawa",
+    "visits": "Miadi",
+    "hba1c": "HbA1c",
+    "refills": "Ongeza Dawa",
+    "profile": "Akaunti"
+  }
+}

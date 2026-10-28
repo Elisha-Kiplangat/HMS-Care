@@ -1,0 +1,41 @@
+{
+  "app": {
+    "title": "HMS Diabetes Platform",
+    "logout": "Log out",
+    "login": "Log in",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "welcome": "Welcome back"
+  },
+  "glucose": {
+    "logHeading": "Log Blood Glucose",
+    "value": "Glucose Value",
+    "context": "Context",
+    "fasting": "Fasting",
+    "beforeMeal": "Before Meal",
+    "afterMeal": "After Meal",
+    "bedtime": "Bedtime",
+    "random": "Random",
+    "low": "Low",
+    "inRange": "In Range",
+    "high": "High",
+    "veryHigh": "Very High",
+    "unit": "mmol/L"
+  },
+  "triage": {
+    "critical": "Critical",
+    "high": "High",
+    "moderate": "Moderate",
+    "low": "Low",
+    "reasons": "Triage Reasons"
+  },
+  "navigation": {
+    "home": "Home",
+    "log": "Log",
+    "meds": "Meds",
+    "visits": "Visits",
+    "hba1c": "HbA1c",
+    "refills": "Refills",
+    "profile": "Profile"
+  }
+}
