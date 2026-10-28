@@ -1,0 +1,71 @@
+# ---------- Secrets (never commit) ----------
+.env
+.env.*
+.env.example
+!.env.example.template
+!.env.example.sample
+*.pem
+*.key
+*.jks
+*.keystore
+google-services.json
+service-account*.json
+local.properties
+
+# ---------- Node / JS ----------
+node_modules/
+dist/
+build/
+out/
+coverage/
+.vite/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- Backend ----------
+backend/uploads/
+backend/tmp/
+backend/exports/
+backend/.nest/
+backend/test-results/
+
+# ---------- Android ----------
+android/.gradle/
+android/**/build/
+android/.idea/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+android/.kotlin/
+android/**/local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ---------- IDE / OS ----------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.iml
+.DS_Store
+Thumbs.db
+
+# ---------- Logs / misc ----------
+*.log
+*.pid
+*.seed
+*.swp
+*.swo
+*.tmp
+*.bak
+tmp/
+temp/
+.npm/
+.pnpm-store/
+.yarn/
