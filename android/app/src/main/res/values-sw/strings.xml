@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HMS Kenya</string>
+    <string name="nav_home">Nyumbani</string>
+    <string name="nav_log">Andika</string>
+    <string name="nav_meds">Dawa</string>
+    <string name="nav_visits">Miadi</string>
+    <string name="log_glucose">Andika Sukari</string>
+    <string name="last_reading">Kipimo cha Mwisho</string>
+    <string name="in_range">Iko Sawa</string>
+    <string name="low">Iko Chini</string>
+    <string name="high">Iko Juu</string>
+    <string name="very_high">Iko Juu Sana</string>
+    <string name="hba1c_trend">Mwelekeo wa HbA1c (Miezi 3)</string>
+    <string name="next_dose">Dawa Inayofuata</string>
+    <string name="upcoming_appointment">Miadi Inayokuja</string>
+    <string name="embu_hospital">Hospitali ya Embu Level Five</string>
+    <string name="request_refill">Omba Ongezeko la Dawa</string>
+    <string name="enter_glucose">Weka Kipimo cha Sukari (mmol/L)</string>
+    <string name="context">Wakati wa Kipimo</string>
+    <string name="notes">Maelezo</string>
+    <string name="save">Hifadhi</string>
+    <string name="login">Ingia</string>
+    <string name="email">Barua Pepe</string>
+    <string name="password">Nenosiri</string>
+    <string name="logout">Toka</string>
+    <string name="offline_sync_notice">Itatumwa intaneti ikirudi</string>
+</resources>

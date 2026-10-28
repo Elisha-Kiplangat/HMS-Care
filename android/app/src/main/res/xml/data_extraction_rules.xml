@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="hms_secure_prefs.xml" />
+        <exclude domain="database" path="hms_db" />
+    </cloud-backup>
+    <device-to-device-transfer>
+        <exclude domain="sharedpref" path="hms_secure_prefs.xml" />
+        <exclude domain="database" path="hms_db" />
+    </device-to-device-transfer>
+</data-extraction-rules>

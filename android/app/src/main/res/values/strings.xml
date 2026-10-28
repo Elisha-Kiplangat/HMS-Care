@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HMS Kenya</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_log">Log</string>
+    <string name="nav_meds">Meds</string>
+    <string name="nav_visits">Visits</string>
+    <string name="log_glucose">Log Glucose</string>
+    <string name="last_reading">Last Reading</string>
+    <string name="in_range">In Range</string>
+    <string name="low">Low</string>
+    <string name="high">High</string>
+    <string name="very_high">Very High</string>
+    <string name="hba1c_trend">3-Month HbA1c Trend</string>
+    <string name="next_dose">Next Medication Dose</string>
+    <string name="upcoming_appointment">Upcoming Consultation</string>
+    <string name="embu_hospital">Embu Level Five Hospital</string>
+    <string name="request_refill">Request Refill</string>
+    <string name="enter_glucose">Enter Blood Glucose (mmol/L)</string>
+    <string name="context">Context</string>
+    <string name="notes">Notes</string>
+    <string name="save">Save</string>
+    <string name="login">Log In</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="logout">Log Out</string>
+    <string name="offline_sync_notice">Will sync when online</string>
+</resources>
