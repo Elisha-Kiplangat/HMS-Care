@@ -1,10 +1,12 @@
 import React from 'react';
+import { LogOut } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
+import { Button } from '../../../components/ui/Button';
 import { useAuthStore } from '../../../store/authStore';
 
 export const PatientProfile: React.FC = () => {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -21,6 +23,11 @@ export const PatientProfile: React.FC = () => {
           <span className="text-xs font-semibold text-primary mt-1 inline-block">MRN: EMB-2024-8821</span>
         </div>
       </Card>
+
+      <Button type="button" variant="outline" className="w-full max-w-2xl justify-center sm:w-fit" onClick={logout}>
+        <LogOut className="mr-2 h-4 w-4" />
+        Log out
+      </Button>
     </div>
   );
 };
